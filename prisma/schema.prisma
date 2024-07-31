@@ -11,11 +11,22 @@ model User {
   id       String  @id @default(cuid())
   email    String  @unique
   name     String
-  hash     String
+  hash     String?
   hashedRt String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model File {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  file_ref  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("files")
 }

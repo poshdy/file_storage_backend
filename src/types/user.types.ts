@@ -1,6 +1,6 @@
 export type User = {
     email:string
-    hash:string
+    hash?:string
     name:string
     hashRt?:string
 }

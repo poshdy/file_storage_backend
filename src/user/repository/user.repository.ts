@@ -38,13 +38,23 @@ export class UserRepository {
       },
     });
   }
-  async updateRt(id: string, hashedRt) {
+  async updateRt(id: string, hashedRt: string) {
     return await this.database.user.update({
       where: {
         id,
       },
       data: {
         hashedRt,
+      },
+    });
+  }
+  async removeRt(id: string) {
+    return await this.database.user.update({
+      where: {
+        id,
+      },
+      data: {
+        hashedRt: '',
       },
     });
   }
