@@ -80,9 +80,9 @@ export class AuthService {
 
   async refreshToken(rt: string, userId: string) {
     const user = await this.userService.getUser(userId, 'id');
-    if (!user) throw new ForbiddenException('access denied');
-    const isRtMatch = await this.compareHash(rt, user.hash);
-    if (!isRtMatch) throw new ForbiddenException('access denied');
+    if (!user) throw new ForbiddenException('access denied1');
+    const isRtMatch = await this.compareHash(rt, user.hashedRt);
+    if (!isRtMatch) throw new ForbiddenException('access denied2');
     const { access_token, refresh_token } = await this.generateTokens(
       user.id,
       user.email,
@@ -110,7 +110,7 @@ export class AuthService {
       }),
       this.jwtService.signAsync(user, {
         expiresIn: 60 * 60 * 24 * 10,
-        secret: process.env.ACCESS_TOKEN_SECRET,
+        secret: process.env.REFRESH_TOKEN_SECRET,
       }),
     ]);
     return {

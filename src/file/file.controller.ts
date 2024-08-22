@@ -1,22 +1,35 @@
-import { Controller, Post, Req, Res, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Req,
+  Res,
+  Get,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { FileService } from './file.service';
-import { Request, Response } from 'express';
-// import { appendFileSync } from 'fs';
-@Controller('file')
+import { FileInterceptor } from '@nestjs/platform-express';
+import { minioClient } from 'src/minio';
+
+@Controller('files')
 export class FileController {
   constructor(private readonly fileService: FileService) {}
-  @Get('files')
-  getFiles() {
-    return this.fileService.getFiles();
+  @Get()
+  async getFiles() {}
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    try {
+      const t = await minioClient.putObject(
+        'my-bucket',
+        file.originalname,
+        file.buffer,
+        file.size,
+      );
+      if (t.etag) return `${file.originalname} uploaded sucessfully`;
+    } catch (error) {
+      console.log(error);
+      return 'something went wrong';
+    }
   }
-  // UploadedFile(@Req() req: Request, @Res() res: Response) {
-  //   const fileName = req.header('file-name');
-
-  //   req.on('data', (chunk) => {
-  //     appendFileSync(fileName, chunk);
-  //   });
-  //   res
-  //     .setHeader('access-control-allow-origin', 'http://localhost:3000')
-  //     .setHeader('access-control-allow-credentials', 'true')
-  //     .end('uploaded!');
 }

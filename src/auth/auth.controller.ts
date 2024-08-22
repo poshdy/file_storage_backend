@@ -15,6 +15,7 @@ import { AccessTokenGuard } from './guards/access-token.guard';
 import { GetCurrentUser } from './decorators/get-current-user';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { Request } from 'express';
+import { User } from 'src/types/user.types';
 
 @Controller('auth')
 export class AuthController {
@@ -52,6 +53,7 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   refreshToken(@GetCurrentUser() user: any) {
-    return console.log(user);
+   return this.authService.refreshToken(user.refresh_token,user.id)
+    
   }
 }

@@ -16,17 +16,35 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Folder    Folder[]
+  File      File[]
 
   @@map("users")
 }
 
 model File {
   id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   type      String
-  file_ref  String   @unique
+  size      Int?
+  file_url  String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("files")
+}
+
+model Folder {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name String @default("untitled")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("folders")
 }
