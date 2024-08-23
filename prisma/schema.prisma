@@ -29,7 +29,6 @@ model File {
   name      String
   type      String
   size      Int?
-  file_url  String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

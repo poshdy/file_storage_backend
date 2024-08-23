@@ -6,6 +6,7 @@ import { DatabaseModule } from './prisma/prisma.module';
 import { LoggerMiddleware } from './middleware/logger.middleware';
 import { FileModule } from './file/file.module';
 import { FolderModule } from './folder/folder.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { FolderModule } from './folder/folder.module';
     DatabaseModule,
     FileModule,
     FolderModule,
+    UploadModule,
   ],
   providers: [Logger],
 })

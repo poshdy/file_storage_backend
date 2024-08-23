@@ -7,17 +7,16 @@ export class FolderService {
   constructor(private readonly folderRepo: FolderRepo) {}
 
   async getFolders(): Promise<TFolder[]> {
-
     return await this.folderRepo.getFolders();
   }
   async getFolder(folderId: string): Promise<TFolder> {
-    return await this.folderRepo.getFolder(folderId);
+    return await this.folderRepo.getFolder(folderId,"");
   }
   async updateFolder(folderId: string) {
-    return await this.folderRepo.updateFolder(folderId);
+    return await this.folderRepo.updateFolder(folderId,"","");
   }
   async deleteFolder(folderId: string) {
-    return await this.folderRepo.deleteFolder(folderId);
+    return await this.folderRepo.deleteFolder(folderId,"");
   }
   async createFolder(data: FolderData) {
     return await this.folderRepo.createFolder(data);

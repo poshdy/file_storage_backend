@@ -10,10 +10,11 @@ export class FolderRepo {
   async getFolders(): Promise<TFolder[]> {
     return await this.database.folder.findMany();
   }
-  async getFolder(folderId: string): Promise<TFolder> {
+  async getFolder(folderId: string, userId: string): Promise<TFolder> {
     return await this.database.folder.findUnique({
       where: {
         id: folderId,
+        userId,
       },
     });
   }
@@ -21,23 +22,26 @@ export class FolderRepo {
     return await this.database.folder.create({
       data: {
         name: data.name,
+        userId: data.userId,
       },
     });
   }
-  async updateFolder(folderId: string) {
+  async updateFolder(folderId: string, name: string, userId: string) {
     return await this.database.folder.update({
       data: {
-        name: '',
+        name,
       },
       where: {
         id: folderId,
+        userId,
       },
     });
   }
-  async deleteFolder(folderId: string) {
+  async deleteFolder(folderId: string, userId: string) {
     return await this.database.folder.delete({
       where: {
         id: folderId,
+        userId,
       },
     });
   }

@@ -16,15 +16,15 @@ export class FileRepo {
     });
   }
 
-  async saveFile(name: string, type: string, ref: string) {
-    return await this.database.file.create({
-      data: {
-        name,
-        type,
-        file_ref: ref,
-      },
-    });
-  }
+  // async saveFile(name: string, type: string, ref: string) {
+  //   return await this.database.file.create({
+  //     data: {
+  //       name,
+  //       type,
+  //       file_ref: ref,
+  //     },
+  //   });
+  // }
   async deleteFile(id: string) {
     return await this.database.file.delete({
       where: {
