@@ -27,6 +27,7 @@ model File {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
+  file_ref  String   @unique
   type      String
   size      Int?
   createdAt DateTime @default(now())

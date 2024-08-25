@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 import * as Minio from 'minio';
 import * as crypto from 'node:crypto';
 @Injectable()
-
 export class UploadService {
   private readonly minioClient = new Minio.Client({
     accessKey: this.configService.getOrThrow('MINIO_ACCESS_KEY'),
@@ -34,14 +34,24 @@ export class UploadService {
   }
   async uploadObject(content: Buffer, size: number, type: string) {
     const name = this.generateUniqueObjectName();
-     return await this.minioClient.putObject(
-      this.bucketName,
-      name,
-      content,
-      size,
-      {
-        'Content-Type': type,
-      },
-    );
+    await this.minioClient.putObject(this.bucketName, name, content, size, {
+      'Content-Type': type,
+    });
+
+    return name;
+  }
+
+  async downloadFile(stream: Response, objectName: string) {
+    const data = await this.minioClient.getObject(this.bucketName, objectName);
+    data.on('data', (chunk) => {
+      stream.write(chunk);
+    });
+    data.on('end', () => {
+      console.log('ended');
+      stream.end()
+    });
+    data.on('error', (err) => {
+      console.log(err);
+    });
   }
 }

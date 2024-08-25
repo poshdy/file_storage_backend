@@ -9,6 +9,10 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UserService } from 'src/user/user.service';
 import { compare, hash } from 'bcrypt';
 import { UpdateUserDto } from 'src/user/dto/update-user.dto';
+import { ReturnedUserType } from 'src/types/user.types';
+
+
+
 
 @Injectable()
 export class AuthService {
@@ -38,8 +42,9 @@ export class AuthService {
       refresh_token,
     };
   }
-  async logIn(userData: UpdateUserDto): Promise<Tokens> {
+  async logIn(userData: UpdateUserDto): Promise<ReturnedUserType> {
     const user = await this.userService.getUser(userData?.email, 'email');
+    console.log(user, 'user obkect from login');
     if (!user) throw new UnauthorizedException('Access Denied');
     const isPassMatch = await this.compareHash(userData.password, user.hash);
     if (!isPassMatch) throw new UnauthorizedException('Access Denied');
@@ -49,6 +54,8 @@ export class AuthService {
     );
     await this.updateRt(user.id, refresh_token);
     return {
+      id: user.id,
+      email: user.email,
       access_token,
       refresh_token,
     };
@@ -64,9 +71,10 @@ export class AuthService {
     });
 
     const { access_token, refresh_token } = await this.generateTokens(
-      newUser.id,
       newUser.email,
+      newUser.id,
     );
+    console.log(refresh_token);
     await this.userService.updateRt(newUser.id, refresh_token);
     return {
       access_token,
@@ -84,8 +92,8 @@ export class AuthService {
     const isRtMatch = await this.compareHash(rt, user.hashedRt);
     if (!isRtMatch) throw new ForbiddenException('access denied2');
     const { access_token, refresh_token } = await this.generateTokens(
-      user.id,
       user.email,
+      user.id,
     );
     await this.updateRt(user.id, refresh_token);
     return {

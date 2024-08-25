@@ -1,30 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from 'src/prisma/prisma.service';
+import { CreatedFile } from 'src/types/file.types';
 
 @Injectable()
 export class FileRepo {
   constructor(private readonly database: DatabaseService) {}
 
-  async getFiles() {
-    return await this.database.file.findMany();
+  async getFiles(userId: string) {
+    return await this.database.file.findMany({
+      where: {
+        userId,
+      },
+    });
   }
-  async getFile(id: string) {
+  async getFile(objectName: string) {
     return await this.database.file.findUnique({
       where: {
-        id,
+        file_ref: objectName,
       },
     });
   }
 
-  // async saveFile(name: string, type: string, ref: string) {
-  //   return await this.database.file.create({
-  //     data: {
-  //       name,
-  //       type,
-  //       file_ref: ref,
-  //     },
-  //   });
-  // }
+  async saveFile(data: CreatedFile) {
+    return await this.database.file.create({
+      data: {
+        name: data.name,
+        type: data.type,
+        file_ref: data.ref,
+        userId: data.userId,
+        size: data.size,
+      },
+    });
+  }
   async deleteFile(id: string) {
     return await this.database.file.delete({
       where: {

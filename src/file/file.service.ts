@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { FileRepo } from './file.repo';
-import { minioClient } from 'src/minio';
 import { UploadService } from 'src/upload/upload.service';
+import { CreatedFile } from 'src/types/file.types';
+import { Response } from 'express';
 
 @Injectable()
 export class FileService {
@@ -10,26 +11,34 @@ export class FileService {
     private readonly uploadService: UploadService,
   ) {}
 
-  async uploadFileMinio(file: Express.Multer.File) {
-    await this.uploadService.uploadObject(
+  async uploadFileMinio(file: Express.Multer.File, user: any) {
+    const name = await this.uploadService.uploadObject(
       file.buffer,
       file.size,
       file.mimetype,
     );
+    const data = {
+      ref: name,
+      name: file.originalname,
+      size: file.size,
+      userId: user.id,
+      type: file.mimetype,
+    } satisfies CreatedFile;
+    return await this.fileRepo.saveFile(data);
   }
-  async downloadFile(ob: string) {
-    return await this.uploadService.getObjectSignedUrl(ob);
+  async getFiles(userId: string) {
+    return this.fileRepo.getFiles(userId);
   }
-
-  async createFileRecord() {
-    return;
+  async getFile(objectName: string) {
+    return this.fileRepo.getFile(objectName);
   }
-
-  async getFiles() {
-    return this.fileRepo.getFiles();
+  async downloadFile(stream: Response, objectName: string) {
+    const file = await this.getfile(objectName);
+    await this.uploadService.downloadFile(stream, objectName);
+    return file;
   }
-  async getfile(id: string) {
-    return this.fileRepo.getFile(id);
+  async getfile(objectName: string) {
+    return this.fileRepo.getFile(objectName);
   }
   async deleteFile(id: string) {
     return this.fileRepo.deleteFile(id);
