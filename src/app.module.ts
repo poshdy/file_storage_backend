@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './prisma/prisma.module';
-import { LoggerMiddleware } from './middleware/logger.middleware';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { FileModule } from './file/file.module';
 import { FolderModule } from './folder/folder.module';
 import { UploadModule } from './upload/upload.module';

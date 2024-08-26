@@ -12,11 +12,11 @@ import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UpdateUserDto } from 'src/user/dto/update-user.dto';
 import { AuthenticationGuard } from './guards/authentication.guard';
-import { GetCurrentUser } from './decorators/get-current-user';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { Request } from 'express';
 import { ReturnedUserType, User } from 'src/types/user.types';
 import { GoogleAuthGuard } from './guards/google.guard';
+import { GetCurrentUser } from 'src/common/decorators/get-current-user';
 
 @Controller('auth')
 export class AuthController {
@@ -40,7 +40,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('local/login')
- async logIn(@Body() data: UpdateUserDto): Promise<ReturnedUserType> {
+  async logIn(@Body() data: UpdateUserDto): Promise<ReturnedUserType> {
     const user = await this.authService.logIn(data);
     return user;
   }
