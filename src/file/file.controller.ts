@@ -1,26 +1,24 @@
 import {
   Controller,
   Post,
-  Req,
   Res,
   Get,
   UseInterceptors,
-  UploadedFile,
   HttpCode,
   HttpStatus,
-  Param,
-  SetMetadata,
   UseGuards,
+  Delete,
+  UploadedFiles,
+  Body,
 } from '@nestjs/common';
 import { FileService } from './file.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { AuthenticationGuard } from 'src/auth/guards/authentication.guard';
-import { AccessFileGuard } from './guards/access_file.guard';
-import { GetCurrentUser } from 'src/auth/decorators/get-current-user';
-import { File } from '@prisma/client';
-import { IsOwner } from 'src/guards/IsOwner.guard';
+import { FileGuard } from './guards/access_file.guard';
 import { Response } from 'express';
-
+import { File } from '@prisma/client';
+import { GetCurrentUser } from 'src/common/decorators/get-current-user';
+import { GetFileName } from './decorators/get-file-name';
 @UseGuards(AuthenticationGuard)
 @Controller('files')
 export class FileController {
@@ -29,14 +27,16 @@ export class FileController {
   // UPLOAD FILE TO MINIO AND SAVE IT TO DB
   @HttpCode(HttpStatus.CREATED)
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('files'))
   async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-    @GetCurrentUser() user: any,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @GetCurrentUser() user: { id: string },
   ) {
     try {
-      console.log(file);
-      return await this.fileService.uploadFileMinio(file, user);
+      await this.fileService.uploadFileMinio(files, user.id);
+      return {
+        message: 'Uploaded!',
+      };
     } catch (error) {
       console.log(error);
       return 'something went wrong';
@@ -44,27 +44,59 @@ export class FileController {
   }
 
   // GET ALL USER FILES / files/{userId}
-  @UseGuards(IsOwner)
   @HttpCode(HttpStatus.OK)
-  @Get(':userId')
-  async getAllUserFiles(@Param() params: { userId: string }): Promise<File[]> {
-    return await this.fileService.getFiles(params.userId);
+  @Get()
+  async getAllUserFiles(
+    @GetCurrentUser() user: { id: string },
+  ): Promise<File[]> {
+    return await this.fileService.getFiles(user.id);
+  }
+
+  // GET USER FILE
+  @UseGuards(FileGuard)
+  @HttpCode(HttpStatus.OK)
+  @Get(':fileId')
+  async getFile(@GetFileName() fileName: string) {
+    return await this.fileService.getFileWithUrl(fileName);
   }
 
   // DOWNLOAD FILE
-  @UseGuards(AccessFileGuard)
+  @UseGuards(FileGuard)
   @HttpCode(HttpStatus.OK)
   @Get(':fileId/download')
   async downloadFile(
-    @Param() params: { fileId: string },
+    @GetFileName() fileName: string,
     @Res() response: Response,
   ) {
-    const file = await this.fileService.getFile(params.fileId);
+    const file = await this.fileService.getFile(fileName);
     const stream = response.writeHead(200, {
       'content-Type': file.type,
       'content-Disposition': `attachment; filename=${file.name}`,
     });
-    await this.fileService.downloadFile(stream, params.fileId);
+    await this.fileService.downloadFile(stream, fileName);
     return { message: `${file.name} downloaded successfully` };
+  }
+
+  // DELETE FILE BY FILE_NAME
+  @UseGuards(FileGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':fileId')
+  async deleteFile(@GetFileName() fileName: string) {
+    return await this.fileService.deleteFile(fileName);
+  }
+
+  // POST GENERATE PREVIEW LINK FOR SHARING
+  @UseGuards(FileGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post(':fileId/preview')
+  async generatePreview(
+    @Body() body: { duration: number },
+    @GetFileName() fileName: string,
+  ): Promise<{ url: string }> {
+    const { duration } = body;
+    const url = await this.fileService.generateLink(fileName, duration);
+    return {
+      url,
+    };
   }
 }

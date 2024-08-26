@@ -11,36 +11,51 @@ export class FileService {
     private readonly uploadService: UploadService,
   ) {}
 
-  async uploadFileMinio(file: Express.Multer.File, user: any) {
-    const name = await this.uploadService.uploadObject(
-      file.buffer,
-      file.size,
-      file.mimetype,
+  async generateLink(objectName: string, duration: number) {
+    const url = await this.uploadService.getObjectSignedUrl(
+      objectName,
+      duration,
     );
-    const data = {
-      ref: name,
-      name: file.originalname,
-      size: file.size,
-      userId: user.id,
-      type: file.mimetype,
-    } satisfies CreatedFile;
-    return await this.fileRepo.saveFile(data);
+    return url;
+  }
+  async uploadFileMinio(files: Array<Express.Multer.File>, userId: string) {
+    files.map(async (file) => {
+      const name = await this.uploadService.uploadObject(
+        file.buffer,
+        file.size,
+        file.mimetype,
+      );
+      const data = {
+        ref: name,
+        name: file.originalname,
+        size: file.size,
+        userId,
+        type: file.mimetype,
+      } satisfies CreatedFile;
+      return await this.fileRepo.saveFile(data);
+    });
   }
   async getFiles(userId: string) {
     return this.fileRepo.getFiles(userId);
   }
+
   async getFile(objectName: string) {
-    return this.fileRepo.getFile(objectName);
+    return await this.fileRepo.getFile(objectName);
+  }
+  async getFileWithUrl(objectName: string) {
+    const url = await this.uploadService.getObjectSignedUrl(objectName);
+    const file = await this.fileRepo.getFile(objectName);
+
+    const data = { url, ...file };
+    return data;
   }
   async downloadFile(stream: Response, objectName: string) {
-    const file = await this.getfile(objectName);
+    const file = await this.getFile(objectName);
     await this.uploadService.downloadFile(stream, objectName);
     return file;
   }
-  async getfile(objectName: string) {
-    return this.fileRepo.getFile(objectName);
-  }
-  async deleteFile(id: string) {
-    return this.fileRepo.deleteFile(id);
+  async deleteFile(fileName: string) {
+    await this.uploadService.deleteObject(fileName);
+    return this.fileRepo.deleteFile(fileName);
   }
 }

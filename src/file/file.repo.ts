@@ -32,10 +32,10 @@ export class FileRepo {
       },
     });
   }
-  async deleteFile(id: string) {
+  async deleteFile(fileName: string) {
     return await this.database.file.delete({
       where: {
-        id,
+        file_ref: fileName,
       },
     });
   }

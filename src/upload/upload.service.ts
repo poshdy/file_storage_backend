@@ -17,12 +17,12 @@ export class UploadService {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async getObjectSignedUrl(objectName: string) {
+  async getObjectSignedUrl(objectName: string, duration: number = 1000) {
     return await this.minioClient.presignedUrl(
       'GET',
       this.bucketName,
       objectName,
-      1000,
+      duration,
     );
   }
 
@@ -30,7 +30,12 @@ export class UploadService {
     return crypto.randomBytes(bytes).toString('hex');
   }
   async deleteObject(objectName: string) {
-    await this.minioClient.removeObject(this.bucketName, objectName);
+    try {
+      await this.minioClient.removeObject(this.bucketName, objectName);
+      console.log('file deleted successfully');
+    } catch (error) {
+      console.error(error);
+    }
   }
   async uploadObject(content: Buffer, size: number, type: string) {
     const name = this.generateUniqueObjectName();
@@ -48,7 +53,7 @@ export class UploadService {
     });
     data.on('end', () => {
       console.log('ended');
-      stream.end()
+      stream.end();
     });
     data.on('error', (err) => {
       console.log(err);
