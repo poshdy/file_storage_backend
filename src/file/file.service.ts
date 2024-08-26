@@ -50,12 +50,9 @@ export class FileService {
     return data;
   }
   async downloadFile(stream: Response, objectName: string) {
-    const file = await this.getfile(objectName);
+    const file = await this.getFile(objectName);
     await this.uploadService.downloadFile(stream, objectName);
     return file;
-  }
-  async getfile(objectName: string) {
-    return this.fileRepo.getFile(objectName);
   }
   async deleteFile(fileName: string) {
     await this.uploadService.deleteObject(fileName);
