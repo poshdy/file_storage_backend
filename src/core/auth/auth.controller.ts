@@ -4,19 +4,23 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { UpdateUserDto } from 'src/user/dto/update-user.dto';
+import { CreateUserDto } from 'src/core/user/dto/create-user.dto';
+import { UpdateUserDto } from 'src/core/user/dto/update-user.dto';
 import { AuthenticationGuard } from './guards/authentication.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { Request } from 'express';
 import { ReturnedUserType, User } from 'src/types/user.types';
 import { GoogleAuthGuard } from './guards/google.guard';
 import { GetCurrentUser } from 'src/common/decorators/get-current-user';
+import { ChangePasswordPayload } from './dto/change-password';
+import { ForgetPasswordPayload } from './dto/forget-password';
+import { ResetPasswordPayload } from './dto/reset-password';
 
 @Controller('auth')
 export class AuthController {
@@ -55,5 +59,34 @@ export class AuthController {
   @Post('refresh')
   refreshToken(@GetCurrentUser() user: any) {
     return this.authService.refreshToken(user.refresh_token, user.id);
+  }
+
+  @UseGuards(AuthenticationGuard)
+  @HttpCode(HttpStatus.OK)
+  @Patch('change-password')
+  async changePassword(
+    @GetCurrentUser() user: { email: string },
+    @Body() data: ChangePasswordPayload,
+  ) {
+    await this.authService.changePassword(data, user.email);
+    return {
+      message: 'Password Changed Successfully',
+    };
+  }
+  @HttpCode(HttpStatus.OK)
+  @Post('forget-password')
+  async forgetPassword(@Body() data: ForgetPasswordPayload) {
+    await this.authService.forgetPassword(data.email);
+    return {
+      message: 'Email Sent!',
+    };
+  }
+  @HttpCode(HttpStatus.OK)
+  @Post('reset-password')
+  async resetPassword(@Body() data: ResetPasswordPayload) {
+    await this.authService.resetPassword(data.newPassword, data.token);
+    return {
+      message: 'Password Updated!',
+    };
   }
 }

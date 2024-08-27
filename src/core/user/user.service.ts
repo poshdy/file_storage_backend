@@ -17,10 +17,20 @@ export class UserService {
   update(id: number, updateUserDto: UpdateUserDto) {
     return `This action updates a #${id} user`;
   }
+  async updateHash(email: string, newHash: string) {
+    return await this.userRepo.updatePassword(email, newHash);
+  }
   updateRt(id: string, hashedRt: string) {
     return this.userRepo.updateRt(id, hashedRt);
   }
 
+  async getResetToken(token: string) {
+    return await this.userRepo.getResetToken(token);
+  }
+
+  async createResetToken(userId: string, token: string, expiresAt: string) {
+    return await this.userRepo.saveResetToken(userId, token, expiresAt);
+  }
   remove(id: number) {
     return `This action removes a #${id} user`;
   }

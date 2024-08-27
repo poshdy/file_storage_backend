@@ -14,13 +14,36 @@ model User {
   hash     String?
   hashedRt String?
 
+  verified     Boolean        @default(false)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   Folder       Folder[]
   File         File[]
   File_Folders File_Folders[]
+  ResetToken   ResetToken[]
 
   @@map("users")
+}
+
+model ResetToken {
+  // id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String
+  expiresAt DateTime
+
+  @@unique([token])
+  @@map("reset_token")
+}
+
+model OTPVerification {
+  id  String @id @default(cuid())
+  otp String
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@map("otp_token")
 }
 
 model File {

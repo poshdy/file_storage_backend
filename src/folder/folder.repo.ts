@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from 'src/prisma/prisma.service';
+import { DatabaseService } from 'src/core/prisma/prisma.service';
 import { TFolder } from 'src/types/folder.types';
 import { FolderData } from './dto/create-folder-dto';
 

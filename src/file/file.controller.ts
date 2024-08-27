@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { FileService } from './file.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { AuthenticationGuard } from 'src/auth/guards/authentication.guard';
+import { AuthenticationGuard } from 'src/core/auth/guards/authentication.guard';
 import { FileGuard } from './guards/access_file.guard';
 import { Response } from 'express';
 import { File } from '@prisma/client';
