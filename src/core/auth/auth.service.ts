@@ -1,24 +1,27 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Tokens } from 'src/types';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { UserService } from 'src/user/user.service';
+import { CreateUserDto } from 'src/core/user/dto/create-user.dto';
+import { UserService } from 'src/core/user/user.service';
 import { compare, hash } from 'bcrypt';
-import { UpdateUserDto } from 'src/user/dto/update-user.dto';
+import { UpdateUserDto } from 'src/core/user/dto/update-user.dto';
 import { ReturnedUserType } from 'src/types/user.types';
-
-
-
+import { ChangePasswordPayload } from './dto/change-password';
+import { nanoid } from 'nanoid';
+import { EmailService } from 'src/common/emails/email.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
   async createAccount(userData: CreateUserDto): Promise<Tokens> {
     const isExist = await this.userService.getUser(userData.email, 'email');
@@ -60,6 +63,47 @@ export class AuthService {
       refresh_token,
     };
   }
+
+  async changePassword(data: ChangePasswordPayload, email: string) {
+    const user = await this.userService.getUser(email, 'email');
+    if (!user) throw new UnauthorizedException();
+
+    const isPassMatch = await this.compareHash(data.oldPassword, user.hash);
+    if (!isPassMatch) throw new UnauthorizedException('Access Denied');
+
+    const areTheySame = data.newPassword === data.confirmPassword;
+    if (!areTheySame) throw new BadRequestException('password does not match');
+
+    const newHashedPassword = await this.hashData(data.newPassword);
+
+    await this.userService.updateHash(email, newHashedPassword);
+  }
+
+  async forgetPassword(email: string) {
+    const user = await this.userService.getUser(email, 'email');
+    if (!user) throw new UnauthorizedException();
+
+    const resetToken = nanoid(64);
+
+    const date = new Date();
+
+    const newDate = date.setMinutes(date.getMinutes() + 10);
+    const expiresAt = new Date(newDate).toISOString();
+    await this.userService.createResetToken(user.id, resetToken, expiresAt);
+    await this.emailService.sendResetMail(user.email, resetToken);
+    // send an email to user's email
+  }
+  async resetPassword(newPassword: string, resetToken: string) {
+    const token = await this.userService.getResetToken(resetToken);
+    if (!token) throw new UnauthorizedException('Invalid Token');
+
+    const newHashedPassword = await this.hashData(newPassword);
+    const user = await this.userService.getUser(token.userId, 'id');
+    if (!user) throw new InternalServerErrorException();
+
+    await this.userService.updateHash(user.email, newHashedPassword);
+  }
+
   async createAccountWithGoogle(email: string, name: string) {
     const isExist = await this.userService.getUser(email, 'email');
     if (isExist) {

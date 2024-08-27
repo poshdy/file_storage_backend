@@ -1,8 +1,8 @@
 import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { UserModule } from './user/user.module';
-import { AuthModule } from './auth/auth.module';
-import { DatabaseModule } from './prisma/prisma.module';
+import { UserModule } from './core/user/user.module';
+import { AuthModule } from './core/auth/auth.module';
+import { DatabaseModule } from './core/prisma/prisma.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { FileModule } from './file/file.module';
 import { FolderModule } from './folder/folder.module';
