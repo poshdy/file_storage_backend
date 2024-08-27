@@ -14,24 +14,26 @@ model User {
   hash     String?
   hashedRt String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Folder    Folder[]
-  File      File[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Folder       Folder[]
+  File         File[]
+  File_Folders File_Folders[]
 
   @@map("users")
 }
 
 model File {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String
-  file_ref  String   @unique
-  type      String
-  size      Int?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  file_ref     String         @unique
+  type         String
+  size         Int?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  File_Folders File_Folders[]
 
   @@map("files")
 }
@@ -40,11 +42,27 @@ model Folder {
   id     String @id @default(cuid())
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name String @default("untitled")
+  name   String @default("untitled")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  File_Folders File_Folders[]
+
   @@map("folders")
+}
+
+model File_Folders {
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileId   String
+  file     File   @relation(fields: [fileId], references: [id], onDelete: SetDefault)
+  folderId String
+  folder   Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([folderId, fileId])
+  @@map("file_folders")
 }
