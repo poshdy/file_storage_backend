@@ -43,7 +43,7 @@ export class AuthService {
       newUser.email,
       newUser.id,
     );
-    await this.userService.updateRt(newUser.id, refresh_token);
+    await this.updateRt(newUser.id, refresh_token);
     return {
       access_token,
       refresh_token,
