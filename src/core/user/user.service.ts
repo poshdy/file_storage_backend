@@ -37,4 +37,7 @@ export class UserService {
   async logOut(userId: string) {
     return await this.userRepo.removeRt(userId);
   }
+  async updateAccountStatus(userId: string) {
+    return await this.userRepo.updateAccStatus(userId)
+  }
 }

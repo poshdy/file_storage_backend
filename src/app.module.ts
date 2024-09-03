@@ -7,6 +7,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { FileModule } from './file/file.module';
 import { FolderModule } from './folder/folder.module';
 import { UploadModule } from './upload/upload.module';
+import { VerificationModule } from './core/verification/verification.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UploadModule } from './upload/upload.module';
     FileModule,
     FolderModule,
     UploadModule,
+    VerificationModule,
   ],
   providers: [Logger],
 })

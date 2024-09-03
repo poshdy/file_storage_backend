@@ -14,13 +14,14 @@ model User {
   hash     String?
   hashedRt String?
 
-  verified     Boolean        @default(false)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  Folder       Folder[]
-  File         File[]
-  File_Folders File_Folders[]
-  ResetToken   ResetToken[]
+  verified        Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Folder          Folder[]
+  File            File[]
+  File_Folders    File_Folders[]
+  ResetToken      ResetToken[]
+  OTPVerification OTPVerification[]
 
   @@map("users")
 }
@@ -37,8 +38,10 @@ model ResetToken {
 }
 
 model OTPVerification {
-  id  String @id @default(cuid())
-  otp String
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otp    String
 
   createdAt DateTime @default(now())
   expiresAt DateTime

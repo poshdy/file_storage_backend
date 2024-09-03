@@ -90,4 +90,14 @@ export class UserRepository {
       },
     });
   }
+  async updateAccStatus(userId: string) {
+    return await this.database.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        verified: true,
+      },
+    });
+  }
 }
