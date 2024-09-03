@@ -7,9 +7,10 @@ import { RefreshTokenStrategy } from './strategies/refresh-token';
 import { UserModule } from 'src/core/user/user.module';
 import { GoogleStrategy } from './strategies/google';
 import { EmailModule } from 'src/common/emails/email.module';
+import { VerificationModule } from '../verification/verification.module';
 
 @Module({
-  imports: [JwtModule.register({}), UserModule, EmailModule],
+  imports: [JwtModule.register({}), UserModule, EmailModule,VerificationModule],
   controllers: [AuthController],
   providers: [
     AuthService,

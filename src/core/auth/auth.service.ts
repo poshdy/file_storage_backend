@@ -3,7 +3,9 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Tokens } from 'src/types';
@@ -15,6 +17,7 @@ import { ReturnedUserType } from 'src/types/user.types';
 import { ChangePasswordPayload } from './dto/change-password';
 import { nanoid } from 'nanoid';
 import { EmailService } from 'src/common/emails/email.service';
+import { VerificationService } from '../verification/verification.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +25,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    private readonly verificationService: VerificationService,
   ) {}
   async createAccount(userData: CreateUserDto): Promise<Tokens> {
     const isExist = await this.userService.getUser(userData.email, 'email');
@@ -79,53 +83,6 @@ export class AuthService {
     await this.userService.updateHash(email, newHashedPassword);
   }
 
-  async forgetPassword(email: string) {
-    const user = await this.userService.getUser(email, 'email');
-    if (!user) throw new UnauthorizedException();
-
-    const resetToken = nanoid(64);
-
-    const date = new Date();
-
-    const newDate = date.setMinutes(date.getMinutes() + 10);
-    const expiresAt = new Date(newDate).toISOString();
-    await this.userService.createResetToken(user.id, resetToken, expiresAt);
-    await this.emailService.sendResetMail(user.email, resetToken);
-    // send an email to user's email
-  }
-  async resetPassword(newPassword: string, resetToken: string) {
-    const token = await this.userService.getResetToken(resetToken);
-    if (!token) throw new UnauthorizedException('Invalid Token');
-
-    const newHashedPassword = await this.hashData(newPassword);
-    const user = await this.userService.getUser(token.userId, 'id');
-    if (!user) throw new InternalServerErrorException();
-
-    await this.userService.updateHash(user.email, newHashedPassword);
-  }
-
-  async createAccountWithGoogle(email: string, name: string) {
-    const isExist = await this.userService.getUser(email, 'email');
-    if (isExist) {
-      throw new Error('This Email is already used');
-    }
-    const newUser = await this.userService.create({
-      email,
-      name,
-    });
-
-    const { access_token, refresh_token } = await this.generateTokens(
-      newUser.email,
-      newUser.id,
-    );
-    console.log(refresh_token);
-    await this.userService.updateRt(newUser.id, refresh_token);
-    return {
-      access_token,
-      refresh_token,
-    };
-  }
-
   async logOut(userId: string) {
     await this.userService.logOut(userId);
   }
@@ -169,6 +126,84 @@ export class AuthService {
       access_token: at,
       refresh_token: rt,
     };
+  }
+  async forgetPassword(email: string) {
+    const user = await this.userService.getUser(email, 'email');
+    if (!user) throw new UnauthorizedException();
+
+    const resetToken = nanoid(64);
+
+    const date = new Date();
+    const newDate = date.setMinutes(date.getMinutes() + 10);
+    const expiresAt = new Date(newDate).toISOString();
+
+    await this.userService.createResetToken(user.id, resetToken, expiresAt);
+    await this.emailService.sendResetMail(user.email, resetToken);
+  }
+  async resetPassword(newPassword: string, resetToken: string) {
+    const token = await this.userService.getResetToken(resetToken);
+    if (!token) throw new UnauthorizedException('Invalid Token');
+
+    const newHashedPassword = await this.hashData(newPassword);
+    const user = await this.userService.getUser(token.userId, 'id');
+    if (!user) throw new NotFoundException();
+
+    await this.userService.updateHash(user.email, newHashedPassword);
+  }
+  async createAccountWithGoogle(email: string, name: string) {
+    const isExist = await this.userService.getUser(email, 'email');
+    if (isExist) {
+      throw new Error('This Email is already used');
+    }
+    const newUser = await this.userService.create({
+      email,
+      name,
+    });
+
+    const { access_token, refresh_token } = await this.generateTokens(
+      newUser.email,
+      newUser.id,
+    );
+    console.log(refresh_token);
+    await this.userService.updateRt(newUser.id, refresh_token);
+    return {
+      access_token,
+      refresh_token,
+    };
+  }
+
+  async verificationHandler(userId: string) {
+    const user = await this.userService.getUser(userId, 'id');
+    if (!user) {
+      throw new NotFoundException();
+    }
+    if (user.verified) {
+      throw new UnauthorizedException('Account is already Verified');
+    }
+    const otp = await this.verificationService.generateVerificationCode(
+      user.id,
+      6,
+    );
+    // await this.emailService.sendOtpMail(user.email, user.name, otp);
+  }
+
+  async verifyOtp(otp: string, userId: string) {
+    const invalidMessage = 'Invalid or expired OTP';
+
+    const user = await this.userService.getUser(userId, 'id');
+    if (!user) {
+      throw new UnprocessableEntityException(invalidMessage);
+    }
+
+    if (user.verified) {
+      throw new UnprocessableEntityException('Account already verified');
+    }
+
+    await this.verificationService.validateOtp(user.id, otp);
+
+    await this.userService.updateAccountStatus(user.id);
+
+    return true;
   }
 
   async hashData(data: string) {

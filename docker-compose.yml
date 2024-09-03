@@ -11,6 +11,14 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
 
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
+    container_name: database_gui
+    depends_on:
+      - postgres_db
+
   minio:
     image: minio/minio
     command: server --console-address ":9001" /data
@@ -21,14 +29,6 @@ services:
       - ./minio_storage:/data
     env_file: .env
     restart: always
-
-  adminer:
-    image: adminer
-    ports:
-      - 8080:8080
-    container_name: database_gui
-    depends_on:
-      - postgres_db
 
 volumes:
   db:

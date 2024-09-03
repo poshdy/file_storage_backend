@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -14,7 +15,6 @@ import { CreateUserDto } from 'src/core/user/dto/create-user.dto';
 import { UpdateUserDto } from 'src/core/user/dto/update-user.dto';
 import { AuthenticationGuard } from './guards/authentication.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
-import { Request } from 'express';
 import { ReturnedUserType, User } from 'src/types/user.types';
 import { GoogleAuthGuard } from './guards/google.guard';
 import { GetCurrentUser } from 'src/common/decorators/get-current-user';
@@ -28,13 +28,13 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get('google/register')
   createAccountWithGoogle() {
-    return { msg: 'ho' };
+    return { success: true };
   }
 
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
   redirect() {
-    return { message: 'donee' };
+    return { success: true };
   }
   @HttpCode(HttpStatus.CREATED)
   @Post('local/register')
@@ -87,6 +87,29 @@ export class AuthController {
     await this.authService.resetPassword(data.newPassword, data.token);
     return {
       message: 'Password Updated!',
+    };
+  }
+
+  @UseGuards(AuthenticationGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('otp')
+  async generateAccountOtp(@GetCurrentUser() user: { id: string }) {
+    await this.authService.verificationHandler(user.id);
+    return {
+      message: 'Sending an email',
+    };
+  }
+  @UseGuards(AuthenticationGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('otp/verify')
+  async verifyOpt(
+    @Query('otp') otp: string,
+    @GetCurrentUser() user: { id: string },
+  ) {
+    console.log(otp);
+    await this.authService.verifyOtp(otp, user.id);
+    return {
+      message: 'Verified!',
     };
   }
 }

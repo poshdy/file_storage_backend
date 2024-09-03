@@ -24,4 +24,14 @@ export class EmailService {
 
     await this.transporter.sendMail(mailOptions);
   }
+  async sendOtpMail(to: string, name: string, otp: string) {
+    const mailOptions = {
+      from: 'Quicksave authentication team',
+      to,
+      subject: 'Reset Password Email',
+      html: `<p>Hi${name ? ' ' + name : ''},</p><p>You may verify your MyApp account using the following OTP: <br /><span style="font-size:24px; font-weight: 700;">${otp}</span></p><p>Regards,<br />MyApp</p>`,
+    } satisfies SendMailOptions;
+
+    await this.transporter.sendMail(mailOptions);
+  }
 }
